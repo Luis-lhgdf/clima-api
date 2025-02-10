@@ -1,152 +1,213 @@
-### **📌 PROJETO COMPLETO: API de Previsão do Tempo com Frontend**
+# 📌 **Estrutura Completa do Projeto: API do Clima com FastAPI, Testes e ENV para Tokens**
 
-✅ **Objetivo:** Criar uma **API de previsão do tempo** que consulta a temperatura de qualquer cidade do mundo e exibe os dados em uma interface visual.  
-✅ **O que você vai treinar?**
-
-- **Backend**: FastAPI, consumo de API externa, separação em camadas (`View → Controller → Service → Client`).
-- **Frontend**: HTML, Bootstrap, JavaScript para consumir a API.
+Este projeto consiste em uma **API de previsão do tempo**, conectada a um serviço externo de clima, estruturada seguindo **Clean Architecture**. Também inclui **testes automatizados** e **uso de variáveis de ambiente (`.env`) para armazenar tokens de API**.
 
 ---
 
-## **📌 Como vai funcionar?**
+# 📂 **1️⃣ Estrutura Completa do Projeto**
 
-### **1️⃣ Backend (FastAPI)**
+````
+📁 src
+│── 📁 backend
+│   ├── 📁 api               # Define os endpoints
+│   │   ├── 📁 v1
+│   │   │   ├── 📄 __init__.py
+│   │   │   ├── 📄 weather_routes.py  # Rota principal
+│   │   ├── 📄 __init__.py
+│   ├── 📁 controllers       # Controla a lógica antes do Service
+│   │   ├── 📄 weather_controller.py
+│   ├── 📁 services          # Processa a lógica de negócio
+│   │   ├── 📄 weather_service.py
+│   ├── 📁 clients           # Comunicação com a API externa (ClimaTempo)
+│   │   ├── 📄 climatempo_client.py
+│   ├── 📁 schemas           # Validação com Pydantic
+│   │   ├── 📄 weather_schema.py
+│   ├── 📁 core              # Configurações globais
+│   │   ├── 📄 config.py      # Carrega variáveis do .env
+│   ├── 📁 tests             # Testes unitários e integração
+│   │   ├── 📄 test_weather_service.py
+│   │   ├── 📄 test_weather_controller.py
+│   ├── 📄 main.py           # Ponto de entrada do FastAPI
+│── 📄 .env                  # Armazena token da API do ClimaTempo
+│── 📄 requirements.txt       # Dependências
+│── 📄 README.md              # Documentação
 
-- Criar uma **API** que recebe uma cidade e retorna a previsão do tempo.
-- A API chama a **OpenWeather API** e **filtra os dados** antes de devolver.
-- Exemplo de chamada:
-  ```
-  GET /previsao-tempo?cidade=São Paulo
-  ```
-- Exemplo de resposta:
-  ```json
-  {
-    "cidade": "São Paulo",
-    "temperatura": "25°C",
-    "descricao": "Parcialmente nublado",
-    "umidade": "60%"
-  }
-  ```
-
-### **2️⃣ Frontend (Bootstrap + JavaScript)**
-
-- Criar uma **interface moderna** onde o usuário digita o nome da cidade e vê a previsão.
-- O botão **"Buscar"** chama a API do backend e exibe os dados na tela.
-- Interface inspirada em aplicativos de clima.
-
----
-
-## **📌 Estrutura do Projeto**
-
-📁 O projeto será dividido em **backend** e **frontend**:
-
-```
-/src
-│── /backend
-│   │── main.py          # Inicializa a API FastAPI
-│   │── /models         # Modelos de dados (Pydantic)
-│   │   │── weather.py  # Modelo para validar resposta
-│   │── /controllers    # Controladores da API
-│   │   │── weather_controller.py
-│   │── /services       # Processamento de regras de negócio
-│   │   │── weather_service.py
-│   │── /clients        # Comunicação com a API externa (OpenWeather)
-│   │   │── weather_client.py
-│   │── /env            # Configurações da API (chave da OpenWeather)
-│   │── requirements.txt # Dependências do projeto
-│
-│── /frontend
-│   │── index.html       # Página principal
-│   │── static/style.css # Estilos (Bootstrap + customizações)
-│   │── static/script.js # JavaScript para consumir API
-│
-│── README.md           # Documentação do projeto
-```
 
 ---
 
-## **📌 Fluxo Completo do Projeto**
+# 🚀 **2️⃣ Como Cada Arquivo Se Conecta**
 
-```
-Usuário digita a cidade no site → Frontend chama a API Backend →
-Backend consulta OpenWeather → Filtra os dados → Retorna resposta JSON →
-Frontend exibe os dados formatados na tela
-```
+A API segue **Clean Architecture**, separando responsabilidades de forma clara.
 
----
-
-## **📌 Requisitos do Projeto**
-
-1️⃣ **Backend**
-
-- Criar a API **`/previsao-tempo`** usando **FastAPI**.
-- Consultar a **OpenWeather API** para obter os dados.
-- **Filtrar** os dados antes de enviar a resposta.
-
-2️⃣ **Frontend**
-
-- Criar um **campo de busca** onde o usuário insere o nome da cidade.
-- Criar um **botão de busca** que chama o backend.
-- Exibir os dados do clima em **uma interface moderna**.
+| **Camada**         | **Responsabilidade**                                    | **Exemplo**               |
+| ------------------ | ------------------------------------------------------- | ------------------------- |
+| **`routes/`**      | Define os endpoints da API (`GET /weather/{city_name}`) | `weather_routes.py`       |
+| **`controllers/`** | Valida a entrada antes de chamar o Service              | `weather_controller.py`   |
+| **`services/`**    | Processa a lógica de negócio e chama o Client           | `weather_service.py`      |
+| **`clients/`**     | Faz a requisição para a API de clima externa            | `openweather_client.py`   |
+| **`schemas/`**     | Define modelos de entrada e saída com validação         | `weather_schema.py`       |
+| **`core/`**        | Carrega configurações e tokens de `.env`                | `config.py`               |
+| **`tests/`**       | Contém testes automatizados                             | `test_weather_service.py` |
 
 ---
 
-## **📌 Exemplo de Uso**
+# 🌍 **3️⃣ Conectando a API ao Serviço de Clima**
 
-### **1️⃣ Usuário busca a cidade no frontend**
+### 📁 **backend/clients/openweather_client.py**
 
-🔽 **Entrada:**
+```python
+import requests
+import os
+from app.backend.core.config import settings
 
-- O usuário digita **"São Paulo"** no site e clica em **Buscar**.
+class OpenWeatherClient:
+    @staticmethod
+    def get_weather(city_name: str):
+        """
+        Faz a requisição para a API OpenWeather e retorna os dados.
+        """
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={settings.OPENWEATHER_API_KEY}&units=metric&lang=pt"
+        response = requests.get(url)
 
-🔽 **A API chama a OpenWeather:**
+        if response.status_code != 200:
+            return None
 
-```
-GET /previsao-tempo?cidade=São Paulo
-```
+        return response.json()
+````
 
-🔽 **Resposta do backend (dados filtrados):**
-
-```json
-{
-  "cidade": "São Paulo",
-  "temperatura": "25°C",
-  "descricao": "Parcialmente nublado",
-  "umidade": "60%"
-}
-```
-
-🔽 **Frontend exibe os dados formatados**
-
-- **Cidade:** São Paulo 🌍
-- **Temperatura:** 25°C 🌡️
-- **Clima:** Parcialmente nublado ☁️
-- **Umidade:** 60% 💧
+✅ **Puxa o token da API diretamente do `.env` e faz a requisição**.
 
 ---
 
-## **📌 Como funciona a OpenWeather API?**
+# 🏗 **4️⃣ Configuração do `.env` para Token da API**
 
-Você precisa **criar uma conta grátis** na OpenWeather para obter uma **chave de API (`API_KEY`)**.
-
-📌 **URL da API:**
+Crie um arquivo **`.env`** na raiz do projeto:
 
 ```
-https://api.openweathermap.org/data/2.5/weather?q={CIDADE}&appid={API_KEY}&units=metric&lang=pt
+OPENWEATHER_API_KEY=SEU_TOKEN_AQUI
 ```
 
-- `{CIDADE}` → Nome da cidade digitada pelo usuário.
-- `{API_KEY}` → Chave de acesso à API (grátis).
-- **`units=metric`** → Retorna a temperatura em **graus Celsius**.
-- **`lang=pt`** → Retorna a descrição do clima em **português**.
+### 📁 **backend/core/config.py**
+
+```python
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    OPENWEATHER_API_KEY: str
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+```
+
+✅ **Agora podemos acessar `settings.OPENWEATHER_API_KEY` em qualquer parte do código!** 🚀
 
 ---
 
-## **📌 Próximos Passos**
+# 📡 **5️⃣ Criando os Endpoints da API**
 
-Agora que temos o **enunciado completo**, vamos para a **implementação**! 🚀
+📁 **backend/api/v1/weather_routes.py**
 
-📌 **O que vamos fazer primeiro?**  
-✅ Criar a **estrutura do projeto** com `backend/` e `frontend/`.
+```python
+from fastapi import APIRouter
+from app.backend.controllers.weather_controller import WeatherController
 
-Me avise quando quiser começar que já preparo o primeiro código! 🚀🎯
+router = APIRouter()
+
+router.add_api_route("/{city_name}", WeatherController.get_weather, methods=["GET"], summary="Obter previsão do tempo")
+```
+
+✅ **Aqui só registramos a rota e deixamos o Controller cuidar do resto**.
+
+---
+
+📁 **backend/controllers/weather_controller.py**
+
+```python
+from fastapi import HTTPException, Depends
+from app.backend.schemas.weather_schema import WeatherRequest, WeatherResponse
+from app.backend.services.weather_service import WeatherService
+
+class WeatherController:
+    @staticmethod
+    def get_weather(request: WeatherRequest = Depends()) -> WeatherResponse:
+        """
+        Recebe os dados validados pelo Schema e chama o serviço para buscar previsão do tempo.
+        """
+        weather = WeatherService.get_weather_data(request.city_name)
+
+        if not weather:
+            raise HTTPException(status_code=404, detail="Cidade não encontrada")
+
+        return weather
+```
+
+✅ **Aqui validamos a entrada antes de chamar o `Service`**.
+
+---
+
+# 🛠 **6️⃣ Criando os Testes**
+
+📁 **tests/unit/test_weather_service.py**
+
+```python
+from app.backend.services.weather_service import WeatherService
+
+def test_get_weather_data():
+    result = WeatherService.get_weather_data("São Paulo")
+    assert result is not None
+    assert "cidade" in result
+    assert "temperatura" in result
+```
+
+✅ **Testa a lógica do `Service` para garantir que ele retorna os dados corretamente**.
+
+---
+
+📁 **tests/integration/test_weather_routes.py**
+
+```python
+from fastapi.testclient import TestClient
+from app.backend.main import app
+
+client = TestClient(app)
+
+def test_get_weather():
+    response = client.get("/api/v1/weather/Sao Paulo")
+    assert response.status_code == 200
+    assert "cidade" in response.json()
+```
+
+✅ **Testa se o endpoint retorna os dados corretamente**.
+
+---
+
+# 🚀 **7️⃣ Rodando a API e Testes**
+
+### **Rodar a API**
+
+```sh
+uvicorn app.backend.main:app --reload
+```
+
+🔹 **Acesse a API em:** `http://localhost:8000/docs`
+
+---
+
+### **Rodar os Testes**
+
+```sh
+pytest tests/
+```
+
+✅ **Isso executará todos os testes unitários e de integração**.
+
+---
+
+# ✅ **Resumo Final**
+
+✔ **Projeto bem estruturado seguindo Clean Architecture**.  
+✔ **Conectado à API do OpenWeather** usando variáveis de ambiente.  
+✔ **Testes unitários e de integração para garantir qualidade**.  
+✔ **`.env` protege o token da API, sem expor no código**.

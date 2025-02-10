@@ -1,0 +1,45 @@
+# 🛑 Ignorar ambiente virtual do Python
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 📦 Ignorar dependências instaladas (caso tenha criado um `venv` dentro do projeto)
+src/backend/requirements.txt.lock
+
+# 🔑 Ignorar arquivos de credenciais e configurações sensíveis
+env/
+*.env
+.env
+.env.*
+
+# 🗑️ Ignorar arquivos de cache e logs
+*.log
+logs/
+debug.log
+*.pid
+*.seed
+*.swp
+*.swo
+
+# 🚀 Ignorar arquivos de build e IDEs
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# 🔍 Ignorar arquivos do sistema (Windows, Linux e Mac)
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# 📄 Ignorar arquivos de compilação Python
+*.egg-info/
+*.egg
+build/
+dist/
+
+
